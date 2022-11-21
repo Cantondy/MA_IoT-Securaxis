@@ -1,0 +1,80 @@
+{
+    "modulesContent": {
+        "$edgeAgent": {
+            "properties.desired": {
+                "schemaVersion": "1.1",
+                "runtime": {
+                    "type": "docker",
+                    "settings": {
+                        "minDockerVersion": "v1.25",
+                        "loggingOptions": "",
+                        "registryCredentials": {
+                            "SONAL": {
+                                "address": "sonal.azurecr.io",
+                                "password": "hcTToLfGSyO9qoE=pngrSFqaYHhG9JMh",
+                                "username": "SONAL"
+                            }
+                        }
+                    }
+                },
+                "systemModules": {
+                    "edgeAgent": {
+                        "settings": {
+                            "image": "mcr.microsoft.com/azureiotedge-agent:1.1",
+                            "createOptions": "{}"
+                        },
+                        "type": "docker"
+                    },
+                    "edgeHub": {
+                        "restartPolicy": "always",
+                        "settings": {
+                            "image": "mcr.microsoft.com/azureiotedge-hub:1.1",
+                            "createOptions": "{\"HostConfig\":{\"PortBindings\":{\"5671/tcp\":[{\"HostPort\":\"5671\"}],\"8883/tcp\":[{\"HostPort\":\"8883\"}],\"443/tcp\":[{\"HostPort\":\"443\"}]}}}"
+                        },
+                        "status": "running",
+                        "type": "docker"
+                    }
+                },
+                "modules": {
+                    "mosquitto": {
+                        "restartPolicy": "always",
+                        "settings": {
+                            "image": "sonal.azurecr.io/eclipse-mosquitto",
+                            "createOptions": "{\"HostConfig\":{\"Hostname\":\"mosquitto\",\"Binds\":[\"/opt/mosquitto/conf/mosquitto.conf:/mosquitto/config/mosquitto.conf\"],\"PortBindings\":{\"1883/tcp\":[{\"HostPort\":\"1883\"}]}}}"
+                        },
+                        "status": "running",
+                        "type": "docker"
+                    },
+                    "vehicle_detection": {
+                        "restartPolicy": "always",
+                        "settings": {
+                            "image": "sonal.azurecr.io/sonal",
+                            "createOptions": "{\"Env\":[\"LD_LIBRARY_PATH=/opt/vc/lib\"],\"HostConfig\":{\"Privileged\":true,\"Devices\":[{\"PathOnHost\":\"/dev/snd\",\"PathInContainer\":\"/dev/snd\"},{\"PathOnHost\":\"/dev/i2c-1\",\"PathInContainer\":\"/dev/i2c-1\"},{\"PathOnHost\":\"/dev/vchiq\",\"PathInContainer\":\"/dev/vchiq\"}],\"Binds\":[\"/home/pi/detection-video:/video\",\"/home/pi/.env:/.env\",\"/opt/vc/lib:/opt/vc/lib\",\"/home/pi/detection-audio:/audio\",\"/home/pi/container-logs:/log\"]}}"
+                        },
+                        "status": "running",
+                        "type": "docker"
+                    },
+                    "mqtt-sideapp": {
+                        "imagePullPolicy": "on-create",
+                        "restartPolicy": "always",
+                        "settings": {
+                            "image": "sonal.azurecr.io/mqtt-sideapp",
+                            "createOptions": "{\"Env\":[\"LD_LIBRARY_PATH=/opt/vc/lib\",\"topic=vehicle-detection\",\"broker=mosquitto\",\"SENSOR_NAME=medina-oct1\",\"audio_location=/audio\",\"video_location=/video\",\"AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=iotstoragesonal;AccountKey=WPqBIbQs2ja1g2BkchOycrLwT/VGRBYDkLIzMuq+zQw5pqLTQuOEqHV6emJedLFwYukmO/ve3zcI+AStxdi+3Q==;EndpointSuffix=core.windows.net\",\"CONTAINER_NAME=iotsecuraxis\"],\"HostConfig\":{\"Binds\":[\"/home/pi/detection-audio:/audio\",\"/home/pi/detection-video:/video\"]}}"
+                        },
+                        "status": "running",
+                        "type": "docker"
+                    }
+                }
+            }
+        },
+        "$edgeHub": {
+            "properties.desired": {
+                "schemaVersion": "1.1",
+                "routes": {},
+                "storeAndForwardConfiguration": {
+                    "timeToLiveSecs": 7200
+                }
+            }
+        }
+    }
+}
