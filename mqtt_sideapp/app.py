@@ -18,7 +18,6 @@ def on_message(client, userdata, msg):
     video_location = os.environ["video_location"] # Folder with Video files
     message_json = json.loads(msg.payload, parse_float=Decimal) # Detection results from VehicleDetection
 
-
     timestamps = [entry["t"] for entry in message_json["vd"]]# Timestamp of the detection, and filename
 
     sensor_name = os.environ["SENSOR_NAME"]
@@ -31,12 +30,10 @@ def on_message(client, userdata, msg):
     print("Audio location: ", audio_filenames)
     video_filenames = [(timestamp, os.path.join("/video/", "video_" + str(int(float(timestamp)*1000)) + ".mp4")) for timestamp in timestamps]
     print("Video location: ", video_filenames)
+    
     for audio_filename in audio_filenames:
         if os.path.isfile(audio_filename[1]):
             print("Audio file exists, uploading to Azure")
-
-            #out = audio_bucket.put_file(audio_filename[1], '{}/{}.wav'.format(sensor_name, str(int(float(audio_filename[0])*1000))))
-
             FILENAME = '{}/{}.wav'.format(sensor_name, str(int(float(audio_filename[0])*1000)))
             blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=FILENAME)
             blob_client.upload_blob(audio_filename[1])
@@ -48,9 +45,6 @@ def on_message(client, userdata, msg):
     for video_filename in video_filenames:
         if os.path.isfile(video_filename[1]):
             print("Video file exists, uploading to Azure")
-
-            #out = video_bucket.put_file(video_filename[1], '{}/{}.mp4'.format(sensor_name, str(int(float(video_filename[0])*1000))))
-
             FILENAME = '{}/{}.mp4'.format(sensor_name, str(int(float(video_filename[0])*1000)))
             blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=FILENAME)
             blob_client.upload_blob(video_filename[1])
@@ -63,5 +57,4 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(os.environ["broker"], 1883, 60)
-
 client.loop_forever()
